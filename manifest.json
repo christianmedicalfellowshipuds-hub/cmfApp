@@ -1,0 +1,26 @@
+{
+  "short_name": "CMF App",
+  "name": "CMF(UDS) Management Portal",
+  "icons": [
+    {
+      "src": "https://firebasestorage.googleapis.com/v0/b/mealone-29b00.firebasestorage.app/o/WhatsApp%20Image%202026-01-27%20at%207.32.38%20AM.jpeg?alt=media&token=6913ddcf-3f97-40a7-9164-9e0b77eab524",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://firebasestorage.googleapis.com/v0/b/mealone-29b00.firebasestorage.app/o/WhatsApp%20Image%202026-01-27%20at%207.32.38%20AM.jpeg?alt=media&token=6913ddcf-3f97-40a7-9164-9e0b77eab524",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    }
+  ],
+  "id": "/index.html",
+  "start_url": "/index.html",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#dc2626",
+  "description": "Ministry management and reporting tool for CMF(UDS) Executives.",
+  "orientation": "portrait"
+}
