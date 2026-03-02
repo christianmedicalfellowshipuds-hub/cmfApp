@@ -114,6 +114,15 @@
             box-shadow: 0 12px 24px rgba(185, 28, 28, 0.28);
         }
 
+        .btn-brand:active,
+        .btn-outline-brand:active {
+            transform: scale(0.98);
+        }
+
+        .btn-clicked {
+            box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.2);
+        }
+
         .btn-outline-brand {
             background: #fff;
             color: var(--brand-700);
@@ -141,6 +150,26 @@
         .input-brand:focus {
             border-color: var(--brand-500);
             box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.18);
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 0.65rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #b91c1c;
+            border: none;
+            background: transparent;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-toggle-btn:hover {
+            background: #fee2e2;
         }
 
         .metric-card {
@@ -187,7 +216,7 @@
         <div id="login-view" class="max-w-xl mx-auto mt-8 md:mt-14 section-card hero-card p-7 md:p-10 fade-in">
             <div class="text-center mb-8 space-y-3">
                 <img src="https://firebasestorage.googleapis.com/v0/b/mealone-29b00.firebasestorage.app/o/WhatsApp%20Image%202026-01-27%20at%207.32.38%20AM.jpeg?alt=media&token=6913ddcf-3f97-40a7-9164-9e0b77eab524" alt="CMF logo" class="app-logo w-24 h-24 mx-auto">
-                <span class="brand-badge"><i class="fa-solid fa-heart"></i> Rebranded Experience</span>
+                <span class="brand-badge"><i class="fa-solid fa-heart"></i> CMF UDS Portal</span>
                 <h2 class="brand-serif text-3xl md:text-4xl text-red-900">Welcome Back</h2>
                 <p class="text-red-800/80 text-sm md:text-base">Sign in to manage souls, leaders, tasks, and reports.</p>
             </div>
@@ -198,7 +227,12 @@
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-red-900 mb-1">Password</label>
-                    <input type="password" id="login-password" required class="input-brand">
+                    <div class="relative">
+                        <input type="password" id="login-password" required class="input-brand pr-10">
+                        <button type="button" class="password-toggle-btn" data-password-toggle="login-password" aria-label="Show password">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" class="btn-brand w-full py-3 text-sm md:text-base">Sign In</button>
                 <p id="login-error" class="text-red-600 text-sm text-center hidden"></p>
@@ -331,7 +365,7 @@
                 <form id="assign-task-form" class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-red-700 uppercase mb-1">Task Title</label>
-                        <input type="text" id="task-title" placeholder="e.g. Visit Sister Grace" required class="input-brand">
+                        <input type="text" id="task-title" placeholder="Enter task title" required class="input-brand">
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -364,10 +398,15 @@
                 <div class="section-card p-6 w-full max-w-md shadow-2xl">
                     <h3 class="text-lg font-bold mb-4 text-red-900">Register New Executive</h3>
                     <form id="add-exec-form" class="space-y-4">
-                        <input type="text" id="exec-name" placeholder="Full Name" class="input-brand" required>
-                        <input type="email" id="exec-email" placeholder="Email Address" class="input-brand" required>
-                        <input type="tel" id="exec-phone" placeholder="Phone (e.g. 054...)" class="input-brand" required>
-                        <input type="password" id="exec-password" placeholder="Set Password" class="input-brand" required>
+                        <input type="text" id="exec-name" placeholder="Name" class="input-brand" required>
+                        <input type="email" id="exec-email" placeholder="Email" class="input-brand" required>
+                        <input type="tel" id="exec-phone" placeholder="Phone number" class="input-brand" required>
+                        <div class="relative">
+                            <input type="password" id="exec-password" placeholder="Password" class="input-brand pr-10" required>
+                            <button type="button" class="password-toggle-btn" data-password-toggle="exec-password" aria-label="Show password">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
 
                         <div class="flex gap-2 pt-2">
                             <button type="button" onclick="toggleModal('add-exec-modal')" class="btn-outline-brand w-1/2 py-3">Cancel</button>
@@ -458,11 +497,11 @@
             <form id="add-soul-form" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-red-700 uppercase mb-1">Full Name</label>
-                    <input type="text" id="soul-name" placeholder="John Doe" required class="input-brand">
+                    <input type="text" id="soul-name" placeholder="Name" required class="input-brand">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-red-700 uppercase mb-1">Phone Number</label>
-                    <input type="tel" id="soul-phone" placeholder="054XXXXXXX" required class="input-brand">
+                    <input type="tel" id="soul-phone" placeholder="Phone number" required class="input-brand">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-red-700 uppercase mb-1">Status</label>

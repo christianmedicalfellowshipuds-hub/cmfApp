@@ -6,6 +6,7 @@ let reportState = {
     answers: {},
     step: 1
 };
+let cancelWizardArmedAt = 0;
 
 // --- NAVIGATION LOGIC ---
 
@@ -22,9 +23,19 @@ function startWizard() {
 }
 
 function cancelWizard() {
-    if(confirm("Are you sure you want to cancel? Your progress will be lost.")) {
-        showView('executive'); // Go back to dashboard
+    if (typeof confirmActionWithToast === 'function') {
+        if (!confirmActionWithToast('cancel-wizard', 'Discard current report?')) return;
+    } else {
+        const now = Date.now();
+        if (!cancelWizardArmedAt || (now - cancelWizardArmedAt) > 4000) {
+            cancelWizardArmedAt = now;
+            showToast("Discard current report? Click cancel again to confirm.", "bg-red-600");
+            return;
+        }
+        cancelWizardArmedAt = 0;
     }
+    showView('executive');
+    showToast("Report canceled", "bg-red-500");
 }
 
 function selectReportType(type) {
@@ -132,6 +143,7 @@ async function submitWizard() {
     const btn = document.getElementById('btn-submit-report');
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+    showToast("Submitting report...", "bg-red-700");
 
     try {
         // 1. Generate PDF (using jsPDF from window)
@@ -192,12 +204,12 @@ async function submitWizard() {
         if (!response.ok) throw new Error(result.error || "Upload failed");
 
         // Success!
-        alert("Report successfully submitted and saved!");
+        showToast("Report submitted successfully", "bg-red-800");
         showView('executive'); // Return to dashboard
         
     } catch (error) {
         console.error("Submission Error:", error);
-        alert("Failed to submit report: " + error.message);
+        showToast(`Failed to submit report: ${error.message}`, "bg-red-500");
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Generate & Upload PDF';

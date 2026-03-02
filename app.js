@@ -11,6 +11,7 @@ const views = {
 const navbar = document.getElementById('navbar');
 const userGreeting = document.getElementById('user-greeting');
 let adminRefreshTimer = null;
+const pendingActionConfirms = new Map();
 
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (refreshBtn) {
         refreshBtn.addEventListener('click', () => refreshAttendanceSummary());
     }
+    initPasswordToggles();
+    initButtonClickFeedback();
     checkAuth();
 });
 
@@ -53,7 +56,14 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
     const errorText = document.getElementById('login-error');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
     
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Signing In...';
+    }
+    showToast("Signing in...", "bg-red-700");
+
     try {
         // Calling your Cloudflare Worker
         const res = await fetch(`${API_BASE_URL}/api/login`, {
@@ -78,11 +88,17 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         document.getElementById('login-email').value = '';
         document.getElementById('login-password').value = '';
         errorText.classList.add('hidden');
+        showToast("Login successful", "bg-red-800");
         checkAuth();
 
     } catch (err) {
         errorText.innerText = err.message;
         errorText.classList.remove('hidden');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Sign In";
+        }
     }
 });
 
@@ -106,6 +122,48 @@ function showView(viewName) {
 function toggleModal(modalId) {
     const modal = document.getElementById(modalId);
     modal.classList.toggle('hidden');
+}
+
+function initPasswordToggles() {
+    const toggleButtons = document.querySelectorAll('[data-password-toggle]');
+    toggleButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-password-toggle');
+            const input = document.getElementById(targetId);
+            if (!input) return;
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            btn.innerHTML = `<i class="fa-solid ${isHidden ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
+            btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+        });
+    });
+}
+
+function initButtonClickFeedback() {
+    document.addEventListener('click', (event) => {
+        const button = event.target.closest('button');
+        if (!button || button.disabled) return;
+        button.classList.add('btn-clicked');
+        setTimeout(() => button.classList.remove('btn-clicked'), 180);
+    });
+}
+
+function confirmActionWithToast(actionKey, prompt, timeoutMs = 4000) {
+    const now = Date.now();
+    const lastClick = pendingActionConfirms.get(actionKey);
+
+    if (lastClick && (now - lastClick) < timeoutMs) {
+        pendingActionConfirms.delete(actionKey);
+        return true;
+    }
+
+    pendingActionConfirms.set(actionKey, now);
+    showToast(`${prompt} Click again to confirm.`, "bg-red-600");
+    setTimeout(() => {
+        const stored = pendingActionConfirms.get(actionKey);
+        if (stored === now) pendingActionConfirms.delete(actionKey);
+    }, timeoutMs);
+    return false;
 }
 
 function openSmsModal(name, phone) {
@@ -224,7 +282,7 @@ async function fetchTasks(userId) {
 }
 
 async function completeTask(taskId) {
-    if (!confirm("Mark this task as completed?")) return;
+    if (!confirmActionWithToast(`complete-task-${taskId}`, "Mark task as completed?")) return;
     
     showToast("Updating task...", "bg-red-700");
 
@@ -253,22 +311,24 @@ function startWizard() {
  * Initializes the Admin Dashboard: Stats and Executive List
  */
 async function initAdminDashboard() {
-    // Run all admin initializations
-    await Promise.all([
-        loadDashboardStats(),
-        loadExecutivesDropdown(), // Your current logic moved to a helper
-        loadExecutivesList(),     // The new list of leaders
-        loadAllMembers(),         // The global member directory
-        loadAttendanceLog(),      // The attendance report log table
-        loadAttendanceSummary()   // Executive submission summary
-    ]);
+    // Run sequentially to reduce burst failures on unstable networks.
+    await loadDashboardStats();
+    await loadExecutivesDropdown();
+    await loadExecutivesList();
+    await loadAllMembers();
+    await loadAttendanceLog();
+    await loadAttendanceSummary();
 }
 
 // Your current logic moved here for cleanliness
 async function loadExecutivesDropdown() {
     try {
-        const res = await fetch(`${API_BASE_URL}/api/executives`);
-        const execs = await res.json();
+        const res = await fetchWithRetry(`${API_BASE_URL}/api/executives`);
+        const payload = await res.json();
+        if (!res.ok) {
+            throw new Error(payload?.error || 'Failed to load executives');
+        }
+        const execs = Array.isArray(payload) ? payload : [];
         
         const dropdown = document.getElementById('task-assignee-select');
         if (!dropdown) return;
@@ -287,6 +347,10 @@ async function loadExecutivesDropdown() {
         }
     } catch (err) {
         console.error("Failed to load dropdown", err);
+        const dropdown = document.getElementById('task-assignee-select');
+        if (dropdown) {
+            dropdown.innerHTML = '<option value="">Failed to load executives</option>';
+        }
     }
 }
 
@@ -315,17 +379,20 @@ document.getElementById('assign-task-form').addEventListener('submit', async (e)
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(taskData)
         });
+        let payload = {};
+        try { payload = await res.json(); } catch (_) {}
 
         if (!res.ok) {
             let message = "Error assigning task";
-            try {
-                const errPayload = await res.json();
-                if (errPayload?.error) message = errPayload.error;
-            } catch (_) {}
+            if (payload?.error) message = payload.error;
             throw new Error(message);
         }
 
-        showToast("Task Assigned & SMS Sent!", "bg-red-800");
+        if (Array.isArray(payload?.warnings) && payload.warnings.length > 0) {
+            showToast(`Task assigned. ${payload.warnings[0]}`, "bg-red-500");
+        } else {
+            showToast("Task assigned and notifications sent", "bg-red-800");
+        }
         e.target.reset();
     } catch (err) {
         showToast(err.message || "Error assigning task", "bg-red-500");
@@ -384,7 +451,26 @@ function formatReportType(type) {
     return type;
 }
 
+async function fetchWithRetry(url, options = {}, retries = 2, baseDelayMs = 700) {
+    let lastError;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            return await fetch(url, options);
+        } catch (err) {
+            lastError = err;
+            if (attempt === retries) break;
+            const delay = baseDelayMs * (attempt + 1);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+    throw lastError;
+}
+
 async function refreshAttendanceSummary(silent = false) {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        if (!silent) showToast("You are offline. Reconnect and try again.", "bg-red-500");
+        return;
+    }
     const [summaryOk, logOk] = await Promise.all([
         loadAttendanceSummary(),
         loadAttendanceLog()
@@ -406,7 +492,7 @@ async function loadAttendanceSummary() {
     tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-6"><i class="fa-solid fa-spinner fa-spin text-red-500"></i></td></tr>';
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/attendance-summary`);
+        const res = await fetchWithRetry(`${API_BASE_URL}/api/admin/attendance-summary`);
         if (!res.ok) throw new Error('Summary request failed');
 
         const payload = await res.json();
@@ -462,8 +548,12 @@ async function loadAttendanceSummary() {
 async function loadExecutivesList() {
     const listContainer = document.getElementById('executives-list');
     try {
-        const res = await fetch(`${API_BASE_URL}/api/executives`);
-        const execs = await res.json();
+        const res = await fetchWithRetry(`${API_BASE_URL}/api/executives`);
+        const payload = await res.json();
+        if (!res.ok) {
+            throw new Error(payload?.error || 'Failed to load executives');
+        }
+        const execs = Array.isArray(payload) ? payload : [];
         
         
         console.log("Executives found:", execs); // CHECK THIS IN F12 CONSOLE
@@ -514,7 +604,7 @@ async function loadExecutivesList() {
 async function toggleExecutiveAccount(execId, currentDisabled, execName) {
     const willDisable = Number(currentDisabled) !== 1;
     const actionText = willDisable ? 'disable' : 'enable';
-    if (!confirm(`Do you want to ${actionText} ${execName}'s account?`)) return;
+    if (!confirmActionWithToast(`toggle-exec-${execId}`, `Click again to ${actionText} ${execName}.`)) return;
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/executives/${execId}/status`, {
@@ -535,8 +625,7 @@ async function toggleExecutiveAccount(execId, currentDisabled, execName) {
 }
 
 async function removeExecutive(execId, execName) {
-    const warning = `Remove ${execName} permanently?\n\nThis will:\n- Unassign members from this executive\n- Delete assigned tasks\n- Keep report records but detach from this account`;
-    if (!confirm(warning)) return;
+    if (!confirmActionWithToast(`remove-exec-${execId}`, `Remove ${execName} permanently?`, 5000)) return;
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/executives/${execId}`, {
@@ -576,17 +665,20 @@ document.getElementById('add-exec-form').addEventListener('submit', async (e) =>
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(execData)
         });
+        let payload = {};
+        try { payload = await res.json(); } catch (_) {}
 
         if (!res.ok) {
             let message = "Failed to add leader";
-            try {
-                const errPayload = await res.json();
-                if (errPayload?.error) message = errPayload.error;
-            } catch (_) {}
+            if (payload?.error) message = payload.error;
             throw new Error(message);
         }
 
-        showToast("New Executive Added!", "bg-red-800");
+        if (Array.isArray(payload?.warnings) && payload.warnings.length > 0) {
+            showToast(`Executive added. ${payload.warnings[0]}`, "bg-red-500");
+        } else {
+            showToast("New executive added and email sent", "bg-red-800");
+        }
         toggleModal('add-exec-modal');
         e.target.reset();
         loadExecutivesList(); // Refresh the list
@@ -648,8 +740,12 @@ async function loadAllMembers() {
     tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-10"><i class="fa-solid fa-spinner fa-spin text-red-500"></i></td></tr>';
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/all-members`);
-        window.allMembersData = await res.json(); // Store globally for search filtering
+        const res = await fetchWithRetry(`${API_BASE_URL}/api/admin/all-members`);
+        const payload = await res.json();
+        if (!res.ok || !Array.isArray(payload)) {
+            throw new Error('Failed to load members');
+        }
+        window.allMembersData = payload; // Store globally for search filtering
         renderMemberTable(window.allMembersData);
     } catch (err) {
         showToast("Failed to load members", "bg-red-500");
@@ -658,7 +754,8 @@ async function loadAllMembers() {
 
 function renderMemberTable(data) {
     const tableBody = document.getElementById('admin-member-table');
-    tableBody.innerHTML = data.map(m => `
+    const rows = Array.isArray(data) ? data : [];
+    tableBody.innerHTML = rows.map(m => `
         <tr class="border-b border-red-100 hover:bg-red-50 transition">
             <td class="py-4 px-2">
                 <div class="font-bold text-red-900">${m.name}</div>
@@ -698,7 +795,7 @@ async function loadAttendanceLog() {
     tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-6"><i class="fa-solid fa-spinner fa-spin text-red-500"></i></td></tr>';
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/attendance`);
+        const res = await fetchWithRetry(`${API_BASE_URL}/api/admin/attendance`);
         if (!res.ok) throw new Error('Attendance request failed');
         const reports = await res.json();
 
@@ -753,12 +850,15 @@ function exportMemberData() {
 
 async function loadDashboardStats() {
     try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/stats`);
+        const res = await fetchWithRetry(`${API_BASE_URL}/api/admin/stats`);
         const stats = await res.json();
+        if (!res.ok || !stats || typeof stats !== 'object') {
+            throw new Error('Failed to load stats');
+        }
 
-        document.getElementById('stat-total-members').innerText = stats.totalMembers;
-        document.getElementById('stat-total-execs').innerText = stats.totalExecutives;
-        document.getElementById('stat-last-attendance').innerText = stats.lastService;
+        document.getElementById('stat-total-members').innerText = Number(stats.totalMembers || 0);
+        document.getElementById('stat-total-execs').innerText = Number(stats.totalExecutives || 0);
+        document.getElementById('stat-last-attendance').innerText = Number(stats.lastService || 0);
     } catch (err) {
         console.error("Failed to load stats", err);
     }
