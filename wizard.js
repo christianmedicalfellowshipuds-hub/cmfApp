@@ -111,16 +111,16 @@ function populateAttendanceList(flockArray) {
     listContainer.innerHTML = ''; // Clear previous
 
     if(flockArray.length === 0) {
-        listContainer.innerHTML = '<p class="text-gray-500 p-4">No members assigned to you yet.</p>';
+        listContainer.innerHTML = '<p class="text-red-700 p-4">No members assigned to you yet.</p>';
         return;
     }
 
     flockArray.forEach(member => {
         const div = document.createElement('div');
-        div.className = "flex items-center p-3 bg-white rounded shadow-sm border border-gray-100";
+        div.className = "flex items-center p-3 bg-white rounded shadow-sm border border-red-100";
         div.innerHTML = `
-            <input type="checkbox" id="mem-${member.id}" value="${member.name}" class="attendance-checkbox w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
-            <label for="mem-${member.id}" class="ml-3 block text-gray-700 font-medium w-full cursor-pointer">${member.name}</label>
+            <input type="checkbox" id="mem-${member.id}" value="${member.name}" class="attendance-checkbox w-5 h-5 text-red-600 rounded border-red-300 focus:ring-red-500">
+            <label for="mem-${member.id}" class="ml-3 block text-red-800 font-medium w-full cursor-pointer">${member.name}</label>
         `;
         listContainer.appendChild(div);
     });
@@ -200,6 +200,6 @@ async function submitWizard() {
         alert("Failed to submit report: " + error.message);
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Submit & Upload';
+        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Generate & Upload PDF';
     }
 }

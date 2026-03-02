@@ -3,290 +3,496 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Church CRM & Reporting</title>
+    <title>CMF UDS Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="https://firebasestorage.googleapis.com/v0/b/mealone-29b00.firebasestorage.app/o/WhatsApp%20Image%202026-01-27%20at%207.32.38%20AM.jpeg?alt=media&token=6913ddcf-3f97-40a7-9164-9e0b77eab524" type="image/jpeg">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#dc2626">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <style>
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        /* Hide scrollbars for a cleaner mobile look */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        :root {
+            --brand-50: #fff5f5;
+            --brand-100: #ffe2e2;
+            --brand-200: #ffc9c9;
+            --brand-400: #f87171;
+            --brand-500: #ef4444;
+            --brand-600: #dc2626;
+            --brand-700: #b91c1c;
+            --ink-900: #311111;
+            --ink-700: #5b2323;
+            --surface: #ffffff;
+            --surface-2: #fffdfd;
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #fca5a5 transparent;
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background:
+                radial-gradient(circle at 0% 0%, rgba(239, 68, 68, 0.12), transparent 42%),
+                radial-gradient(circle at 100% 0%, rgba(185, 28, 28, 0.10), transparent 38%),
+                linear-gradient(135deg, #fffdfd 0%, #fff7f7 45%, #fff1f1 100%);
+            color: var(--ink-900);
+        }
+
+        .brand-serif {
+            font-family: 'Playfair Display', serif;
+            letter-spacing: 0.01em;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.35s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .section-card {
+            background: linear-gradient(145deg, var(--surface), var(--surface-2));
+            border: 1px solid #ffe4e6;
+            border-radius: 1.25rem;
+            box-shadow: 0 14px 30px rgba(127, 29, 29, 0.08);
+        }
+
+        .hero-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-card::after {
+            content: "";
+            position: absolute;
+            inset: auto -80px -80px auto;
+            width: 220px;
+            height: 220px;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(248, 113, 113, 0.35), transparent 70%);
+            pointer-events: none;
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            border-radius: 999px;
+            padding: 0.3rem 0.75rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+        }
+
+        .btn-brand {
+            background: linear-gradient(125deg, var(--brand-600), var(--brand-700));
+            color: #fff;
+            border: 1px solid transparent;
+            border-radius: 0.9rem;
+            font-weight: 800;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            box-shadow: 0 10px 20px rgba(185, 28, 28, 0.24);
+        }
+
+        .btn-brand:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.02);
+            box-shadow: 0 12px 24px rgba(185, 28, 28, 0.28);
+        }
+
+        .btn-outline-brand {
+            background: #fff;
+            color: var(--brand-700);
+            border: 1px solid #fecaca;
+            border-radius: 0.85rem;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-brand:hover {
+            background: #fef2f2;
+            border-color: #fca5a5;
+        }
+
+        .input-brand {
+            width: 100%;
+            border: 1px solid #fecaca;
+            border-radius: 0.85rem;
+            background: #fff;
+            padding: 0.75rem 0.95rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .input-brand:focus {
+            border-color: var(--brand-500);
+            box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.18);
+        }
+
+        .metric-card {
+            border-radius: 1rem;
+            border: 1px solid #fecaca;
+            padding: 1rem 1.25rem;
+            background: #fff;
+        }
+
+        .metric-card.metric-main {
+            color: #fff;
+            border: none;
+            background: linear-gradient(130deg, #dc2626, #991b1b);
+            box-shadow: 0 12px 24px rgba(153, 27, 27, 0.25);
+        }
+
+        .app-logo {
+            object-fit: cover;
+            object-position: center;
+            border-radius: 1rem;
+            border: 2px solid #fecaca;
+            box-shadow: 0 10px 20px rgba(127, 29, 29, 0.2);
+        }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased h-screen flex flex-col">
+<body class="h-screen flex flex-col antialiased">
 
-    <nav id="navbar" class="bg-red-600 text-white p-4 shadow-md hidden flex justify-between items-center">
-        <h1 class="text-xl font-bold"><i class="fa-solid fa-church mr-2"></i> CMF APP</h1>
-        <div class="flex items-center gap-4">
-            <span id="user-greeting" class="text-sm font-medium"></span>
-            <button onclick="logout()" class="bg-gray-800 hover:bg-indigo-700 px-3 py-1 rounded text-sm transition">Logout</button>
+    <nav id="navbar" class="hidden flex justify-between items-center px-4 md:px-8 py-3 border-b border-red-100 bg-white/90 backdrop-blur-md sticky top-0 z-40">
+        <div class="flex items-center gap-3">
+            <img src="https://firebasestorage.googleapis.com/v0/b/mealone-29b00.firebasestorage.app/o/WhatsApp%20Image%202026-01-27%20at%207.32.38%20AM.jpeg?alt=media&token=6913ddcf-3f97-40a7-9164-9e0b77eab524" alt="CMF logo" class="app-logo w-11 h-11">
+            <div>
+                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-red-500">CMF UDS</p>
+                <h1 class="brand-serif text-lg leading-tight text-red-900">Command Center</h1>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 md:gap-4">
+            <span id="user-greeting" class="text-sm font-semibold text-red-900"></span>
+            <button onclick="logout()" class="btn-outline-brand px-4 py-2 text-sm">Logout</button>
         </div>
     </nav>
 
     <main class="flex-grow p-4 md:p-8 overflow-y-auto">
-        
-        <div id="login-view" class="max-w-md mx-auto mt-20 bg-white p-8 rounded-xl shadow-lg fade-in">
-            <div class="text-center mb-8">
-                <i class="fa-solid fa-seedling text-4xl text-indigo-600 mb-2"></i>
-                <h2 class="text-2xl font-bold text-gray-800">Welcome Back</h2>
-                <p class="text-gray-500 text-sm">Sign in to manage your flock</p>
+
+        <div id="login-view" class="max-w-xl mx-auto mt-8 md:mt-14 section-card hero-card p-7 md:p-10 fade-in">
+            <div class="text-center mb-8 space-y-3">
+                <img src="https://firebasestorage.googleapis.com/v0/b/mealone-29b00.firebasestorage.app/o/WhatsApp%20Image%202026-01-27%20at%207.32.38%20AM.jpeg?alt=media&token=6913ddcf-3f97-40a7-9164-9e0b77eab524" alt="CMF logo" class="app-logo w-24 h-24 mx-auto">
+                <span class="brand-badge"><i class="fa-solid fa-heart"></i> Rebranded Experience</span>
+                <h2 class="brand-serif text-3xl md:text-4xl text-red-900">Welcome Back</h2>
+                <p class="text-red-800/80 text-sm md:text-base">Sign in to manage souls, leaders, tasks, and reports.</p>
             </div>
             <form id="login-form" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="login-email" required class="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <label class="block text-sm font-bold text-red-900 mb-1">Email</label>
+                    <input type="email" id="login-email" required class="input-brand">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" id="login-password" required class="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <label class="block text-sm font-bold text-red-900 mb-1">Password</label>
+                    <input type="password" id="login-password" required class="input-brand">
                 </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition">Sign In</button>
-                <p id="login-error" class="text-red-500 text-sm text-center hidden"></p>
+                <button type="submit" class="btn-brand w-full py-3 text-sm md:text-base">Sign In</button>
+                <p id="login-error" class="text-red-600 text-sm text-center hidden"></p>
             </form>
         </div>
 
-        <div id="executive-view" class="max-w-4xl mx-auto hidden fade-in space-y-6">
-            <button onclick="startWizard()" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold text-lg py-4 rounded-xl shadow-lg hover:shadow-xl transition flex justify-center items-center gap-2">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Start New Report
-            </button>
+        <div id="executive-view" class="max-w-6xl mx-auto hidden fade-in space-y-6">
+            <div class="section-card hero-card p-6 md:p-7">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+                    <div class="flex items-center gap-4">
+                        <img src="https://firebasestorage.googleapis.com/v0/b/mealone-29b00.firebasestorage.app/o/WhatsApp%20Image%202026-01-27%20at%207.32.38%20AM.jpeg?alt=media&token=6913ddcf-3f97-40a7-9164-9e0b77eab524" alt="CMF logo" class="app-logo w-14 h-14">
+                        <div>
+                            <p class="brand-badge">Executive Dashboard</p>
+                            <h2 class="brand-serif text-2xl text-red-900 mt-2">Shepherd Your Flock</h2>
+                        </div>
+                    </div>
+                    <button onclick="startWizard()" class="btn-brand px-6 py-4 text-base md:text-lg flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Start New Report
+                    </button>
+                </div>
+            </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-gray-800">
-                        <i class="fa-solid fa-list-check text-indigo-500"></i> My Tasks
+                <div class="section-card p-6">
+                    <h3 class="text-lg font-extrabold mb-4 flex items-center gap-2 text-red-900">
+                        <i class="fa-solid fa-list-check text-red-500"></i> My Tasks
                     </h3>
                     <div id="task-list" class="space-y-3">
-                        <p class="text-gray-500 text-sm italic text-center py-4">Checking for tasks...</p>
+                        <p class="text-red-800/70 text-sm italic text-center py-4">Checking for tasks...</p>
                     </div>
                 </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative">
-                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-gray-800">
-                        <i class="fa-solid fa-users text-indigo-500"></i> My Flock
+                <div class="section-card p-6 relative">
+                    <h3 class="text-lg font-extrabold mb-4 flex items-center gap-2 text-red-900">
+                        <i class="fa-solid fa-users text-red-500"></i> My Flock
                     </h3>
-                    <div id="flock-list" class="space-y-3 max-h-80 overflow-y-auto no-scrollbar pb-16">
-                        </div>
-                    <button onclick="toggleModal('add-soul-modal')" class="absolute bottom-6 right-6 bg-indigo-600 text-white w-14 h-14 rounded-full shadow-2xl hover:bg-indigo-700 flex items-center justify-center text-2xl transition-transform active:scale-90 z-10">
+                    <div id="flock-list" class="space-y-3 max-h-80 overflow-y-auto no-scrollbar pb-16"></div>
+                    <button onclick="toggleModal('add-soul-modal')" class="absolute bottom-6 right-6 btn-brand w-14 h-14 rounded-full flex items-center justify-center text-2xl active:scale-95 z-10">
                         <i class="fa-solid fa-plus"></i>
                     </button>
                 </div>
             </div>
         </div>
 
-        <div id="wizard-view" class="max-w-2xl mx-auto hidden fade-in bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-            <div class="mb-8 flex justify-between items-center border-b pb-4">
+        <div id="wizard-view" class="max-w-3xl mx-auto hidden fade-in section-card p-6 md:p-8">
+            <div class="mb-8 flex justify-between items-center border-b border-red-100 pb-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-800">Report Wizard</h2>
-                    <p id="wizard-step-text" class="text-gray-500 text-sm">Step 1 of 4</p>
+                    <p class="brand-badge">Report Journey</p>
+                    <h2 class="brand-serif text-3xl text-red-900 mt-2">Report Wizard</h2>
+                    <p id="wizard-step-text" class="text-red-800/70 text-sm">Step 1 of 4</p>
                 </div>
-                <button onclick="cancelWizard()" class="text-red-400 hover:text-red-600 transition"><i class="fa-solid fa-circle-xmark text-2xl"></i></button>
+                <button onclick="cancelWizard()" class="text-red-400 hover:text-red-600 transition"><i class="fa-solid fa-circle-xmark text-3xl"></i></button>
             </div>
 
             <div id="step-1" class="wizard-step space-y-4">
-                <h3 class="text-lg font-bold">Select Report Type:</h3>
-                <button onclick="selectReportType('cell')" class="w-full text-left p-4 border rounded-xl hover:bg-indigo-50 transition flex items-center gap-4">
-                    <i class="fa-solid fa-house-user text-2xl text-indigo-500"></i>
-                    <span>Cell Meeting Report</span>
+                <h3 class="text-lg font-bold text-red-900">Select Report Type</h3>
+                <button onclick="selectReportType('cell')" class="w-full text-left p-4 border border-red-100 rounded-xl hover:bg-red-50 transition flex items-center gap-4">
+                    <i class="fa-solid fa-house-user text-2xl text-red-500"></i>
+                    <span class="font-semibold">Cell Meeting Report</span>
                 </button>
-                <button onclick="selectReportType('service')" class="w-full text-left p-4 border rounded-xl hover:bg-purple-50 transition flex items-center gap-4">
-                    <i class="fa-solid fa-church text-2xl text-purple-500"></i>
-                    <span>Church Service Report</span>
+                <button onclick="selectReportType('service')" class="w-full text-left p-4 border border-red-100 rounded-xl hover:bg-red-50 transition flex items-center gap-4">
+                    <i class="fa-solid fa-church text-2xl text-red-500"></i>
+                    <span class="font-semibold">Church Service Report</span>
                 </button>
             </div>
 
             <div id="step-2" class="wizard-step hidden space-y-4">
-                <h3 class="text-lg font-bold">Mark Attendance:</h3>
-                <div id="wizard-flock-list" class="space-y-2 max-h-64 overflow-y-auto no-scrollbar p-2 bg-gray-50 rounded-lg"></div>
-                <button onclick="nextStep(3)" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold">Continue</button>
+                <h3 class="text-lg font-bold text-red-900">Mark Attendance</h3>
+                <div id="wizard-flock-list" class="space-y-2 max-h-64 overflow-y-auto no-scrollbar p-2 bg-red-50/60 rounded-lg border border-red-100"></div>
+                <button onclick="nextStep(3)" class="btn-brand w-full py-3 font-bold">Continue</button>
             </div>
 
             <div id="step-3" class="wizard-step hidden space-y-4">
-                <h3 class="text-lg font-bold">Quick Details:</h3>
-                <textarea id="q-topic" placeholder="Main Topic/Message..." class="w-full p-3 border rounded-lg h-24 outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-                <textarea id="q-prayer" placeholder="Testimonies & Prayer Requests..." class="w-full p-3 border rounded-lg h-24 outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-                <textarea id="q-challenges" placeholder="Any Challenges?" class="w-full p-3 border rounded-lg h-24 outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                <h3 class="text-lg font-bold text-red-900">Quick Details</h3>
+                <textarea id="q-topic" placeholder="Main Topic/Message..." class="input-brand h-24"></textarea>
+                <textarea id="q-prayer" placeholder="Testimonies & Prayer Requests..." class="input-brand h-24"></textarea>
+                <textarea id="q-challenges" placeholder="Any Challenges?" class="input-brand h-24"></textarea>
                 <div class="flex gap-2">
-                    <button onclick="prevStep(2)" class="w-1/3 bg-gray-200 py-3 rounded-lg font-bold">Back</button>
-                    <button onclick="nextStep(4)" class="w-2/3 bg-indigo-600 text-white py-3 rounded-lg font-bold">Review</button>
+                    <button onclick="prevStep(2)" class="btn-outline-brand w-1/3 py-3 font-bold">Back</button>
+                    <button onclick="nextStep(4)" class="btn-brand w-2/3 py-3 font-bold">Review</button>
                 </div>
             </div>
 
             <div id="step-4" class="wizard-step hidden space-y-6 text-center">
                 <i class="fa-solid fa-file-pdf text-6xl text-red-500"></i>
-                <h3 class="text-xl font-bold">Ready to submit!</h3>
-                <div class="flex justify-around bg-gray-50 p-4 rounded-lg">
-                    <div><span id="review-present" class="block text-2xl font-bold">0</span><span class="text-xs text-gray-500 uppercase">Present</span></div>
-                    <div><span id="review-absent" class="block text-2xl font-bold">0</span><span class="text-xs text-gray-500 uppercase">Absent</span></div>
+                <h3 class="text-2xl brand-serif text-red-900">Ready to Submit</h3>
+                <div class="flex justify-around bg-red-50 border border-red-100 p-4 rounded-lg">
+                    <div><span id="review-present" class="block text-3xl font-extrabold text-red-700">0</span><span class="text-xs text-red-800 uppercase tracking-wider">Present</span></div>
+                    <div><span id="review-absent" class="block text-3xl font-extrabold text-red-700">0</span><span class="text-xs text-red-800 uppercase tracking-wider">Absent</span></div>
                 </div>
-                <button id="btn-submit-report" onclick="submitWizard()" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg">Generate & Upload PDF</button>
+                <button id="btn-submit-report" onclick="submitWizard()" class="btn-brand w-full py-4 font-bold text-lg">Generate & Upload PDF</button>
             </div>
         </div>
 
         <div id="admin-view" class="max-w-6xl mx-auto hidden fade-in space-y-6">
-            <h2 class="text-2xl font-bold text-gray-800">Admin Command Center</h2>
-            
-           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-    <div class="bg-indigo-600 p-6 rounded-2xl shadow-lg shadow-indigo-200 text-white">
-        <p class="text-indigo-100 text-xs font-bold uppercase tracking-wider">Total Members</p>
-        <h2 id="stat-total-members" class="text-3xl font-black mt-1">0</h2>
-        <i class="fa-solid fa-users opacity-20 text-4xl float-right -mt-8"></i>
-    </div>
+            <div class="section-card hero-card p-6 md:p-7">
+                <div class="flex items-center gap-4">
+                    <img src="https://firebasestorage.googleapis.com/v0/b/mealone-29b00.firebasestorage.app/o/WhatsApp%20Image%202026-01-27%20at%207.32.38%20AM.jpeg?alt=media&token=6913ddcf-3f97-40a7-9164-9e0b77eab524" alt="CMF logo" class="app-logo w-14 h-14">
+                    <div>
+                        <p class="brand-badge">Administration</p>
+                        <h2 class="brand-serif text-3xl text-red-900 mt-2">Admin Command Center</h2>
+                    </div>
+                </div>
+            </div>
 
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <p class="text-gray-400 text-xs font-bold uppercase tracking-wider">Active Executives</p>
-        <h2 id="stat-total-execs" class="text-3xl font-black text-gray-800 mt-1">0</h2>
-        <i class="fa-solid fa-user-shield text-indigo-500 opacity-20 text-4xl float-right -mt-8"></i>
-    </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="metric-card metric-main">
+                    <p class="text-red-100 text-xs font-bold uppercase tracking-wider">Total Members</p>
+                    <h2 id="stat-total-members" class="text-3xl font-black mt-1">0</h2>
+                    <i class="fa-solid fa-users opacity-25 text-4xl float-right -mt-8"></i>
+                </div>
 
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <p class="text-gray-400 text-xs font-bold uppercase tracking-wider">Last Attendance</p>
-        <h2 id="stat-last-attendance" class="text-3xl font-black text-gray-800 mt-1">0</h2>
-        <i class="fa-solid fa-clipboard-check text-green-500 opacity-20 text-4xl float-right -mt-8"></i>
-    </div>
-    </div>
+                <div class="metric-card">
+                    <p class="text-red-600 text-xs font-bold uppercase tracking-wider">Active Executives</p>
+                    <h2 id="stat-total-execs" class="text-3xl font-black text-red-900 mt-1">0</h2>
+                    <i class="fa-solid fa-user-shield text-red-400 opacity-30 text-4xl float-right -mt-8"></i>
+                </div>
 
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <div class="metric-card">
+                    <p class="text-red-600 text-xs font-bold uppercase tracking-wider">Last Attendance</p>
+                    <h2 id="stat-last-attendance" class="text-3xl font-black text-red-900 mt-1">0</h2>
+                    <i class="fa-solid fa-clipboard-check text-red-400 opacity-30 text-4xl float-right -mt-8"></i>
+                </div>
+            </div>
+
+            <div class="section-card p-6">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-red-900">
                     <i class="fa-solid fa-thumbtack text-red-500"></i> Assign New Task
                 </h3>
                 <form id="assign-task-form" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Task Title</label>
-                        <input type="text" id="task-title" placeholder="e.g. Visit Sister Grace" required 
-                               class="w-full px-4 py-3 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
+                        <label class="block text-xs font-bold text-red-700 uppercase mb-1">Task Title</label>
+                        <input type="text" id="task-title" placeholder="e.g. Visit Sister Grace" required class="input-brand">
                     </div>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Assign To</label>
-                            <select id="task-assignee-select" required 
-                                    class="w-full px-4 py-3 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                            <label class="block text-xs font-bold text-red-700 uppercase mb-1">Assign To</label>
+                            <select id="task-assignee-select" required class="input-brand bg-white">
                                 <option value="">Select Executive...</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Deadline</label>
-                            <input type="date" id="task-due-date" required 
-                                   class="w-full px-4 py-3 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
+                            <label class="block text-xs font-bold text-red-700 uppercase mb-1">Deadline</label>
+                            <input type="date" id="task-due-date" required class="input-brand">
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-black transition shadow-lg">
-                        Send Task & SMS Notification
-                    </button>
+                    <button type="submit" class="btn-brand w-full py-4 font-bold">Send Task & SMS Notification</button>
                 </form>
             </div>
 
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
-            <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-gray-800">Church Executives</h3>
-            <button onclick="toggleModal('add-exec-modal')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-indigo-700">
-            + Add New Leader
-            </button>
-            </div>
-    
-            <div id="executives-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            </div>
+            <div class="section-card p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-red-900">Church Executives</h3>
+                    <button onclick="toggleModal('add-exec-modal')" class="btn-brand px-4 py-2 text-sm font-bold">+ Add New Leader</button>
+                </div>
+
+                <div id="executives-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
 
             <div id="add-exec-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
-            <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <h3 class="text-lg font-bold mb-4">Register New Executive</h3>
-            <form id="add-exec-form" class="space-y-4">
-            <input type="text" id="exec-name" placeholder="Full Name" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" required>
-            <input type="email" id="exec-email" placeholder="Email Address" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" required>
-            <input type="tel" id="exec-phone" placeholder="Phone (e.g. 054...)" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" required>
-            <input type="password" id="exec-password" placeholder="Set Password" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" required>
-            
-            <div class="flex gap-2 pt-2">
-                <button type="button" onclick="toggleModal('add-exec-modal')" class="w-1/2 py-3 text-gray-500 font-bold">Cancel</button>
-                <button type="submit" class="w-1/2 bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg">Save Leader</button>
-            </div>
-            </form>
-            </div>
-            </div>
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <h3 class="text-xl font-bold text-gray-800">Member Directory</h3>
-        <div class="relative w-full md:w-64">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-gray-400 text-sm"></i>
-            <input type="text" id="member-search" onkeyup="filterMembers()" placeholder="Search members..." class="w-full pl-10 p-3 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
-        </div>
-        </div>
+                <div class="section-card p-6 w-full max-w-md shadow-2xl">
+                    <h3 class="text-lg font-bold mb-4 text-red-900">Register New Executive</h3>
+                    <form id="add-exec-form" class="space-y-4">
+                        <input type="text" id="exec-name" placeholder="Full Name" class="input-brand" required>
+                        <input type="email" id="exec-email" placeholder="Email Address" class="input-brand" required>
+                        <input type="tel" id="exec-phone" placeholder="Phone (e.g. 054...)" class="input-brand" required>
+                        <input type="password" id="exec-password" placeholder="Set Password" class="input-brand" required>
 
-            <div class="overflow-x-scroll overflow-y-scroll">
-                <button onclick="exportMemberData()" class="text-xs text-indigo-600 font-bold underline">Export Member List</button>
-              <table class="w-full text-left border-collapse">
-                 <thead>
-                <tr class="text-xs uppercase text-gray-400 border-b border-gray-50">
-                    <th class="py-3 px-2">Member</th>
-                    <th class="py-3 px-2">Status</th>
-                    <th class="py-3 px-2">Level/Course</th>
-                    <th class="py-3 px-2">Assigned To</th>
-                    <th class="py-3 px-2 text-right">Action</th>
-                </tr>
-                  </thead>
-            <tbody id="admin-member-table">
-                </tbody>
-             </table>
+                        <div class="flex gap-2 pt-2">
+                            <button type="button" onclick="toggleModal('add-exec-modal')" class="btn-outline-brand w-1/2 py-3">Cancel</button>
+                            <button type="submit" class="btn-brand w-1/2 py-3 font-bold">Save Leader</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="section-card p-6 mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <h3 class="text-xl font-bold text-red-900">Member Directory</h3>
+                    <div class="relative w-full md:w-64">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-red-300 text-sm"></i>
+                        <input type="text" id="member-search" onkeyup="filterMembers()" placeholder="Search members..." class="input-brand pl-10">
                     </div>
+                </div>
+
+                <div class="overflow-x-scroll overflow-y-scroll">
+                    <button onclick="exportMemberData()" class="text-xs text-red-700 font-bold underline">Export Member List</button>
+                    <table class="w-full text-left border-collapse mt-2">
+                        <thead>
+                            <tr class="text-xs uppercase text-red-400 border-b border-red-100">
+                                <th class="py-3 px-2">Member</th>
+                                <th class="py-3 px-2">Status</th>
+                                <th class="py-3 px-2">Level/Course</th>
+                                <th class="py-3 px-2">Assigned To</th>
+                                <th class="py-3 px-2 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-member-table"></tbody>
+                    </table>
+                </div>
             </div>
 
+            <div class="section-card p-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-red-900">Attendance Submission Summary</h3>
+                        <p class="text-xs text-red-600">Tracks who has submitted Tuesday and Friday reports in the current month.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="attendance-summary-updated-at" class="text-xs text-red-500"></span>
+                        <button id="refresh-attendance-summary-btn" type="button" class="btn-outline-brand px-4 py-2 text-xs font-bold">
+                            <i class="fa-solid fa-rotate-right mr-1"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto mb-8">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-xs uppercase text-red-400 border-b border-red-100">
+                                <th class="py-3 px-2">Executive</th>
+                                <th class="py-3 px-2 text-center">Attended vs Should</th>
+                                <th class="py-3 px-2 text-center">Submitted</th>
+                                <th class="py-3 px-2 text-center">Expected</th>
+                                <th class="py-3 px-2 text-center">Pending</th>
+                                <th class="py-3 px-2">Last Submission</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendance-summary-table-body"></tbody>
+                    </table>
+                </div>
+
+                <h3 class="text-xl font-bold text-red-900 mb-4">Attendance Reports</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-xs uppercase text-red-400 border-b border-red-100">
+                                <th class="py-3 px-2">Submitted At</th>
+                                <th class="py-3 px-2">Type</th>
+                                <th class="py-3 px-2">Submitted By</th>
+                                <th class="py-3 px-2 text-center">Present</th>
+                                <th class="py-3 px-2 text-center">Absent</th>
+                                <th class="py-3 px-2 text-right">Report</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendance-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </main>
 
-            
-
-    
-    <div id="add-soul-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl scale-95 fade-in">
-            <h3 class="text-xl font-bold mb-4">Add New Soul</h3>
+    <div id="add-soul-modal" class="hidden fixed inset-0 bg-black/55 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="section-card p-6 w-full max-w-md shadow-2xl fade-in">
+            <h3 class="text-xl brand-serif text-red-900 mb-4">Add New Soul</h3>
             <form id="add-soul-form" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
-                    <input type="text" id="soul-name" placeholder="John Doe" required class="w-full px-4 py-3 border rounded-lg">
+                    <label class="block text-xs font-bold text-red-700 uppercase mb-1">Full Name</label>
+                    <input type="text" id="soul-name" placeholder="John Doe" required class="input-brand">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Phone Number</label>
-                    <input type="tel" id="soul-phone" placeholder="054XXXXXXX" required class="w-full px-4 py-3 border rounded-lg">
+                    <label class="block text-xs font-bold text-red-700 uppercase mb-1">Phone Number</label>
+                    <input type="tel" id="soul-phone" placeholder="054XXXXXXX" required class="input-brand">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
-                    <select id="soul-status" class="w-full px-4 py-3 border rounded-lg">
+                    <label class="block text-xs font-bold text-red-700 uppercase mb-1">Status</label>
+                    <select id="soul-status" class="input-brand bg-white">
                         <option value="Visitor">First Timer / Visitor</option>
                         <option value="New Convert">New Convert</option>
                         <option value="Regular">Regular Member</option>
                     </select>
                 </div>
                 <div class="flex gap-2 pt-2">
-                    <button type="button" onclick="toggleModal('add-soul-modal')" class="w-1/2 bg-gray-100 py-3 rounded-lg">Cancel</button>
-                    <button type="submit" class="w-1/2 bg-indigo-600 text-white py-3 rounded-lg font-bold">Save Soul</button>
+                    <button type="button" onclick="toggleModal('add-soul-modal')" class="btn-outline-brand w-1/2 py-3">Cancel</button>
+                    <button type="submit" class="btn-brand w-1/2 py-3 font-bold">Save Soul</button>
                 </div>
             </form>
         </div>
     </div>
 
     <div id="sms-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
-    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-        <h3 id="sms-modal-title" class="text-lg font-bold mb-2">Send Message</h3>
-        <textarea id="sms-modal-content" class="w-full p-4 border rounded-xl h-32 focus:ring-2 focus:ring-blue-500 outline-none mb-4 text-sm"></textarea>
-        <input type="hidden" id="sms-modal-phone">
-        <div class="flex gap-2">
-            <button onclick="toggleModal('sms-modal')" class="w-1/2 py-3 text-gray-500 font-bold">Cancel</button>
-            <button onclick="confirmSendSMS()" class="w-1/2 bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg">Send SMS</button>
+        <div class="section-card p-6 w-full max-w-sm shadow-2xl">
+            <h3 id="sms-modal-title" class="text-lg font-bold mb-2 text-red-900">Send Message</h3>
+            <textarea id="sms-modal-content" class="input-brand h-32 mb-4 text-sm"></textarea>
+            <input type="hidden" id="sms-modal-phone">
+            <div class="flex gap-2">
+                <button onclick="toggleModal('sms-modal')" class="btn-outline-brand w-1/2 py-3">Cancel</button>
+                <button onclick="confirmSendSMS()" class="btn-brand w-1/2 py-3 font-bold">Send SMS</button>
+            </div>
         </div>
     </div>
-    </div>
 
-    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl hidden fade-in z-[100]"></div>
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-red-900 text-white px-6 py-3 rounded-full shadow-2xl hidden fade-in z-[100]"></div>
 
     <script src="app.js"></script>
     <script src="wizard.js"></script>
