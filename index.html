@@ -12,7 +12,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="https://firebasestorage.googleapis.com/v0/b/mealone-29b00.firebasestorage.app/o/WhatsApp%20Image%202026-01-27%20at%207.32.38%20AM.jpeg?alt=media&token=6913ddcf-3f97-40a7-9164-9e0b77eab524" type="image/jpeg">
-
     <style>
         :root {
             --brand-50: #fff5f5;
@@ -52,8 +51,14 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .no-scrollbar::-webkit-scrollbar {
@@ -193,27 +198,495 @@
             border: 2px solid #fecaca;
             box-shadow: 0 10px 20px rgba(127, 29, 29, 0.2);
         }
+
+        .sidebar {
+            width: 280px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #fff;
+            border-right: 1px solid #ffe4e6;
+            z-index: 50;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.85rem 1.25rem;
+            border-radius: 0.75rem;
+            color: var(--ink-700);
+            font-weight: 600;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-item:hover {
+            background: var(--brand-50);
+            color: var(--brand-700);
+        }
+
+        .sidebar-item.active {
+            background: linear-gradient(125deg, var(--brand-600), var(--brand-700));
+            color: #fff;
+            box-shadow: 0 8px 16px rgba(185, 28, 28, 0.15);
+        }
+
+        .mobile-header {
+            display: none;
+            background: #fff;
+            border-bottom: 1px solid #ffe4e6;
+            padding: 0.75rem 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                height: 100vh;
+                top: 0;
+            }
+
+            .sidebar.open {
+                left: 0;
+                box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
+            }
+
+            .mobile-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .main-content {
+                padding: 1rem !important;
+            }
+        }
+
+        .main-content {
+            flex-grow: 1;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .tab-section {
+            display: none;
+        }
+
+        .tab-section.active {
+            display: block;
+        }
     </style>
 </head>
-<body class="h-screen flex flex-col antialiased">
-
-    <nav id="navbar" class="hidden flex justify-between items-center px-4 md:px-8 py-3 border-b border-red-100 bg-white/90 backdrop-blur-md sticky top-0 z-40">
+<body class="bg-gray-50 antialiased overflow-hidden">
+    <header id="mobile-header" class="hidden mobile-header">
         <div class="flex items-center gap-3">
-            <img src="https://firebasestorage.googleapis.com/v0/b/mealone-29b00.firebasestorage.app/o/WhatsApp%20Image%202026-01-27%20at%207.32.38%20AM.jpeg?alt=media&token=6913ddcf-3f97-40a7-9164-9e0b77eab524" alt="CMF logo" class="app-logo w-11 h-11">
-            <div>
-                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-red-500">CMF UDS</p>
-                <h1 class="brand-serif text-lg leading-tight text-red-900">Command Center</h1>
+            <button onclick="toggleSidebar()" class="text-red-900 text-2xl p-2"><i class="fa-solid fa-bars"></i></button>
+            <img src="https://firebasestorage.googleapis.com/v0/b/mealone-29b00.firebasestorage.app/o/WhatsApp%20Image%202026-01-27%20at%207.32.38%20AM.jpeg?alt=media&token=6913ddcf-3f97-40a7-9164-9e0b77eab524" class="w-8 h-8 app-logo" alt="CMF logo">
+            <h1 class="brand-serif text-lg text-red-900 font-bold">CMF Portal</h1>
+        </div>
+        <div id="mobile-user-actions"></div>
+    </header>
+
+    <div id="app-wrapper" class="hidden flex h-screen">
+        <aside id="sidebar" class="sidebar flex flex-col p-4">
+            <div class="mb-10 px-2 flex items-center gap-3">
+                <img src="https://firebasestorage.googleapis.com/v0/b/mealone-29b00.firebasestorage.app/o/WhatsApp%20Image%202026-01-27%20at%207.32.38%20AM.jpeg?alt=media&token=6913ddcf-3f97-40a7-9164-9e0b77eab524" class="w-12 h-12 app-logo" alt="CMF logo">
+                <div>
+                    <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-red-500">CMF UDS</p>
+                    <h2 class="brand-serif text-xl leading-tight text-red-900">Command</h2>
+                </div>
             </div>
-        </div>
-        <div class="flex items-center gap-2 md:gap-4">
-            <span id="user-greeting" class="text-sm font-semibold text-red-900"></span>
-            <button onclick="logout()" class="btn-outline-brand px-4 py-2 text-sm">Logout</button>
-        </div>
-    </nav>
 
-    <main class="flex-grow p-4 md:p-8 overflow-y-auto">
+            <nav class="flex-grow space-y-1">
+                <div onclick="switchTab('dashboard')" class="sidebar-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-house-chimney"></i> <span>Dashboard</span>
+                </div>
+                <div onclick="switchTab('members')" class="sidebar-item" data-tab="members">
+                    <i class="fa-solid fa-users"></i> <span>Members</span>
+                </div>
+                <div onclick="switchTab('reports')" class="sidebar-item" data-tab="reports">
+                    <i class="fa-solid fa-file-invoice"></i> <span>Reports</span>
+                </div>
+                <div onclick="switchTab('next-service')" class="sidebar-item" data-tab="next-service">
+                    <i class="fa-solid fa-calendar-day"></i> <span>Tuesday Service</span>
+                </div>
+                <div onclick="switchTab('invitees')" class="sidebar-item" data-tab="invitees">
+                    <i class="fa-solid fa-user-plus"></i> <span>Invitees</span>
+                </div>
+                <div onclick="switchTab('academics')" class="sidebar-item" data-tab="academics">
+                    <i class="fa-solid fa-graduation-cap"></i> <span>Academics</span>
+                </div>
+            </nav>
 
-        <div id="login-view" class="max-w-xl mx-auto mt-8 md:mt-14 section-card hero-card p-7 md:p-10 fade-in">
+            <div class="mt-auto border-t border-red-50 pt-4">
+                <div id="sidebar-user-info" class="mb-4 px-2 space-y-1">
+                    <p id="nav-user-name" class="font-bold text-red-900 truncate">User Name</p>
+                    <p id="nav-user-role" class="text-[10px] font-bold text-red-500 uppercase tracking-widest">Role</p>
+                </div>
+                <button onclick="logout()" class="sidebar-item text-red-600 hover:bg-red-50 w-full">
+                    <i class="fa-solid fa-right-from-bracket"></i> <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content flex-grow relative space-y-6">
+            <section id="tab-dashboard" class="tab-section active animate-fade-in space-y-6">
+                <div id="admin-dashboard-view" class="hidden space-y-6">
+                    <div class="section-card hero-card p-6 md:p-7">
+                        <p class="brand-badge">Administration</p>
+                        <h2 class="brand-serif text-3xl text-red-900 mt-2">Admin Command Center</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="metric-card metric-main">
+                            <p class="text-red-100 text-xs font-bold uppercase tracking-wider">Total Members</p>
+                            <h2 id="stat-total-members" class="text-3xl font-black mt-1">0</h2>
+                            <i class="fa-solid fa-users opacity-25 text-4xl float-right -mt-8"></i>
+                        </div>
+                        <div class="metric-card">
+                            <p class="text-red-600 text-xs font-bold uppercase tracking-wider">Active Executives</p>
+                            <h2 id="stat-total-execs" class="text-3xl font-black text-red-900 mt-1">0</h2>
+                            <i class="fa-solid fa-user-shield text-red-400 opacity-30 text-4xl float-right -mt-8"></i>
+                        </div>
+                        <div class="metric-card">
+                            <p class="text-red-600 text-xs font-bold uppercase tracking-wider">Last Attendance</p>
+                            <h2 id="stat-last-attendance" class="text-3xl font-black text-red-900 mt-1">0</h2>
+                            <i class="fa-solid fa-clipboard-check text-red-400 opacity-30 text-4xl float-right -mt-8"></i>
+                        </div>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-red-900">
+                            <i class="fa-solid fa-thumbtack text-red-500"></i> Assign New Task
+                        </h3>
+                        <form id="assign-task-form" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-red-700 uppercase mb-1">Task Title</label>
+                                <input type="text" id="task-title" placeholder="e.g. Visit Sister Grace" required class="input-brand">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-red-700 uppercase mb-1">Assign To</label>
+                                    <select id="task-assignee-select" required class="input-brand bg-white">
+                                        <option value="">Select Executive...</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-red-700 uppercase mb-1">Deadline</label>
+                                    <input type="date" id="task-due-date" required class="input-brand">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-brand w-full py-4 font-bold">Send Task & SMS Notification</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="executive-dashboard-view" class="hidden space-y-6">
+                    <div class="section-card hero-card p-6 md:p-7">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+                            <div>
+                                <p class="brand-badge">Executive Dashboard</p>
+                                <h2 class="brand-serif text-2xl text-red-900 mt-2">Shepherd Your Flock</h2>
+                            </div>
+                            <button onclick="startWizard()" class="btn-brand px-6 py-4 text-base md:text-lg flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Start New Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="section-card p-6">
+                            <h3 class="text-lg font-extrabold mb-4 flex items-center gap-2 text-red-900">
+                                <i class="fa-solid fa-list-check text-red-500"></i> My Tasks
+                            </h3>
+                            <div id="task-list" class="space-y-3">
+                                <p class="text-red-800/70 text-sm italic text-center py-4">Checking for tasks...</p>
+                            </div>
+                        </div>
+
+                        <div class="section-card p-6 relative">
+                            <h3 class="text-lg font-extrabold mb-4 flex items-center gap-2 text-red-900">
+                                <i class="fa-solid fa-users text-red-500"></i> My Flock
+                            </h3>
+                            <div id="flock-list" class="space-y-3 max-h-80 overflow-y-auto no-scrollbar pb-16"></div>
+                            <button onclick="toggleModal('add-soul-modal')" class="absolute bottom-6 right-6 btn-brand w-14 h-14 rounded-full flex items-center justify-center text-2xl active:scale-95 z-10">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="tab-members" class="tab-section space-y-6">
+                <div id="admin-members-view" class="hidden space-y-6">
+                    <div class="section-card p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold text-red-900">Church Executives</h3>
+                            <button onclick="toggleModal('add-exec-modal')" class="btn-brand px-4 py-2 text-sm font-bold">+ Add New Leader</button>
+                        </div>
+                        <div id="executives-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                            <h3 class="text-xl font-bold text-red-900">Member Directory</h3>
+                            <div class="relative w-full md:w-64">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-red-300 text-sm"></i>
+                                <input type="text" id="member-search" onkeyup="filterMembers()" placeholder="Search members..." class="input-brand pl-10">
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <button onclick="exportMemberData()" class="text-xs text-red-700 font-bold underline mb-2">Export Member List</button>
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-xs uppercase text-red-400 border-b border-red-100">
+                                        <th class="py-3 px-2">Member</th>
+                                        <th class="py-3 px-2">Status</th>
+                                        <th class="py-3 px-2">Level/Course</th>
+                                        <th class="py-3 px-2">Assigned To</th>
+                                        <th class="py-3 px-2 text-center">Streak</th>
+                                        <th class="py-3 px-2 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-member-table"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="executive-members-view" class="hidden">
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-red-900 mb-2">Members</h3>
+                        <p class="text-sm text-red-700">Use Dashboard to manage your assigned flock and add new members.</p>
+                    </div>
+                </div>
+            </section>
+            <section id="tab-reports" class="tab-section space-y-6">
+                <div id="admin-reports-view" class="hidden space-y-6">
+                    <div class="section-card p-6">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                            <div>
+                                <h3 class="text-xl font-bold text-red-900">Attendance Submission Summary</h3>
+                                <p class="text-xs text-red-600">Tracks Tuesday and Friday report submissions in the current month.</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span id="attendance-summary-updated-at" class="text-xs text-red-500"></span>
+                                <button id="refresh-attendance-summary-btn" type="button" class="btn-outline-brand px-4 py-2 text-xs font-bold">
+                                    <i class="fa-solid fa-rotate-right mr-1"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-xs uppercase text-red-400 border-b border-red-100">
+                                        <th class="py-3 px-2">Executive</th>
+                                        <th class="py-3 px-2 text-center">Attended vs Should</th>
+                                        <th class="py-3 px-2 text-center">Submitted</th>
+                                        <th class="py-3 px-2 text-center">Expected</th>
+                                        <th class="py-3 px-2 text-center">Pending</th>
+                                        <th class="py-3 px-2">Last Submission</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attendance-summary-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-red-900 mb-4">Reports (Cell, Service, Outreach)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-xs uppercase text-red-400 border-b border-red-100">
+                                        <th class="py-3 px-2">Submitted At</th>
+                                        <th class="py-3 px-2">Type</th>
+                                        <th class="py-3 px-2">Submitted By</th>
+                                        <th class="py-3 px-2 text-center">Present</th>
+                                        <th class="py-3 px-2 text-center">Absent</th>
+                                        <th class="py-3 px-2 text-right">Report</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attendance-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-red-900 mb-4">Daily Insight</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                            <input type="date" id="insight-date-picker" class="input-brand md:col-span-2">
+                            <button id="btn-analyze-insights" type="button" onclick="fetchDailyInsights()" class="btn-brand py-3">Analyze</button>
+                            <button id="btn-remind-missing" type="button" onclick="remindMissingReports()" class="btn-outline-brand py-3 hidden">Remind Missing</button>
+                        </div>
+                        <div id="ai-insight-box" class="hidden p-4 bg-red-50 border border-red-100 rounded-xl mb-4">
+                            <p class="text-xs font-bold uppercase text-red-600 mb-2">AI Insight</p>
+                            <p id="ai-insight-text" class="text-sm text-red-900"></p>
+                        </div>
+                        <div id="insight-results" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-4 bg-white border border-red-100 rounded-xl">
+                                <p class="text-xs font-bold uppercase text-red-600 mb-2">Submitted</p>
+                                <div id="insight-submitted-list" class="space-y-2"></div>
+                            </div>
+                            <div class="p-4 bg-white border border-red-100 rounded-xl">
+                                <p class="text-xs font-bold uppercase text-red-600 mb-2">Missing</p>
+                                <div id="insight-missing-list" class="space-y-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="executive-reports-view" class="hidden">
+                    <div class="section-card p-6 space-y-4">
+                        <h3 class="text-xl font-bold text-red-900">Submit Reports</h3>
+                        <p class="text-sm text-red-700">Use the report wizard to submit cell meeting, church service, and outreach reports.</p>
+                        <button onclick="startWizard()" class="btn-brand px-6 py-3">Open Report Wizard</button>
+                    </div>
+                </div>
+            </section>
+            <section id="tab-next-service" class="tab-section space-y-6">
+                <div id="admin-next-service-view" class="hidden space-y-6">
+                    <div class="section-card p-6">
+                        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+                            <div>
+                                <h3 class="text-xl font-bold text-red-900">Next Tuesday Service Monitor</h3>
+                                <p id="next-service-date-label" class="text-xs text-red-600">Loading service date...</p>
+                            </div>
+                            <button type="button" onclick="loadNextTuesdayServicePlan(true)" class="btn-outline-brand px-4 py-2 text-xs font-bold">
+                                <i class="fa-solid fa-rotate-right mr-1"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="metric-card">
+                            <p class="text-red-600 text-xs font-bold uppercase tracking-wider">Expected (All Members)</p>
+                            <h2 id="next-service-expected-count" class="text-3xl font-black text-red-900 mt-1">0</h2>
+                        </div>
+                        <div class="metric-card">
+                            <p class="text-red-600 text-xs font-bold uppercase tracking-wider">Confirmed Expected (From Outreach)</p>
+                            <h2 id="next-service-confirmed-count" class="text-3xl font-black text-red-900 mt-1">0</h2>
+                        </div>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h4 class="font-bold text-red-900 mb-3">Member Confirmation List</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-xs uppercase text-red-400 border-b border-red-100">
+                                        <th class="py-3 px-2">Member</th>
+                                        <th class="py-3 px-2">Phone</th>
+                                        <th class="py-3 px-2 text-right">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="next-service-member-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h4 class="font-bold text-red-900 mb-3">Confirmed Members</h4>
+                        <div id="next-service-confirmed-list" class="flex flex-wrap gap-2 text-sm text-red-800"></div>
+                    </div>
+                </div>
+
+                <div id="executive-next-service-view" class="hidden">
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-red-900 mb-2">Next Tuesday Service</h3>
+                        <p class="text-sm text-red-700">Your confirmed members are captured from your outreach report submission.</p>
+                        <div id="executive-next-service-confirmed-list" class="mt-4 flex flex-wrap gap-2 text-sm text-red-800"></div>
+                    </div>
+                </div>
+            </section>
+            <section id="tab-invitees" class="tab-section space-y-6">
+                <div id="admin-invitees-view" class="hidden space-y-6">
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-red-900 mb-4">Invitee Tab</h3>
+                        <form id="invitee-form-admin" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="text" id="invitee-name-admin" class="input-brand" placeholder="Invitee name" required>
+                            <input type="tel" id="invitee-phone-admin" class="input-brand" placeholder="Phone number (optional)">
+                            <input type="date" id="invitee-service-date-admin" class="input-brand" required>
+                            <input type="text" id="invitee-service-label-admin" class="input-brand" placeholder="Service e.g. Tuesday Service" required>
+                            <textarea id="invitee-notes-admin" class="input-brand md:col-span-2 h-24" placeholder="Notes"></textarea>
+                            <button type="submit" class="btn-brand md:col-span-2 py-3">Record Invitee</button>
+                        </form>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h4 class="font-bold text-red-900 mb-3">Recorded Invitees</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-xs uppercase text-red-400 border-b border-red-100">
+                                        <th class="py-3 px-2">Name</th>
+                                        <th class="py-3 px-2">Phone</th>
+                                        <th class="py-3 px-2">Service</th>
+                                        <th class="py-3 px-2">Date</th>
+                                        <th class="py-3 px-2">Invited By</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invitee-table-body-admin"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="executive-invitees-view" class="hidden space-y-6">
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-red-900 mb-4">Invite Non-Members</h3>
+                        <form id="invitee-form-exec" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="text" id="invitee-name-exec" class="input-brand" placeholder="Invitee name" required>
+                            <input type="tel" id="invitee-phone-exec" class="input-brand" placeholder="Phone number (optional)">
+                            <input type="date" id="invitee-service-date-exec" class="input-brand" required>
+                            <input type="text" id="invitee-service-label-exec" class="input-brand" placeholder="Service e.g. Tuesday Service" required>
+                            <textarea id="invitee-notes-exec" class="input-brand md:col-span-2 h-24" placeholder="Notes"></textarea>
+                            <button type="submit" class="btn-brand md:col-span-2 py-3">Record Invitee</button>
+                        </form>
+                    </div>
+
+                    <div class="section-card p-6">
+                        <h4 class="font-bold text-red-900 mb-3">My Invitees</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-xs uppercase text-red-400 border-b border-red-100">
+                                        <th class="py-3 px-2">Name</th>
+                                        <th class="py-3 px-2">Phone</th>
+                                        <th class="py-3 px-2">Service</th>
+                                        <th class="py-3 px-2">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invitee-table-body-exec"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="tab-academics" class="tab-section space-y-6">
+                <div id="admin-academics-view" class="hidden">
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-red-900 mb-2">Academic Tracking</h3>
+                        <p class="text-sm text-red-700">Open a member or executive profile from the Members tab to log academic records.</p>
+                    </div>
+                </div>
+
+                <div id="executive-academics-view" class="hidden">
+                    <div class="section-card p-6">
+                        <h3 class="text-xl font-bold text-red-900 mb-2">Academic Tracking</h3>
+                        <p class="text-sm text-red-700">Academic records are managed by leadership from the Members tab profile view.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="login-container" class="h-screen flex items-center justify-center p-4">
+        <div id="login-view" class="max-w-xl w-full section-card hero-card p-7 md:p-10 fade-in">
             <div class="text-center mb-8 space-y-3">
                 <img src="https://firebasestorage.googleapis.com/v0/b/mealone-29b00.firebasestorage.app/o/WhatsApp%20Image%202026-01-27%20at%207.32.38%20AM.jpeg?alt=media&token=6913ddcf-3f97-40a7-9164-9e0b77eab524" alt="CMF logo" class="app-logo w-24 h-24 mx-auto">
                 <span class="brand-badge"><i class="fa-solid fa-heart"></i> CMF UDS Portal</span>
@@ -238,46 +711,9 @@
                 <p id="login-error" class="text-red-600 text-sm text-center hidden"></p>
             </form>
         </div>
-
-        <div id="executive-view" class="max-w-6xl mx-auto hidden fade-in space-y-6">
-            <div class="section-card hero-card p-6 md:p-7">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-                    <div class="flex items-center gap-4">
-                        <img src="https://firebasestorage.googleapis.com/v0/b/mealone-29b00.firebasestorage.app/o/WhatsApp%20Image%202026-01-27%20at%207.32.38%20AM.jpeg?alt=media&token=6913ddcf-3f97-40a7-9164-9e0b77eab524" alt="CMF logo" class="app-logo w-14 h-14">
-                        <div>
-                            <p class="brand-badge">Executive Dashboard</p>
-                            <h2 class="brand-serif text-2xl text-red-900 mt-2">Shepherd Your Flock</h2>
-                        </div>
-                    </div>
-                    <button onclick="startWizard()" class="btn-brand px-6 py-4 text-base md:text-lg flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Start New Report
-                    </button>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="section-card p-6">
-                    <h3 class="text-lg font-extrabold mb-4 flex items-center gap-2 text-red-900">
-                        <i class="fa-solid fa-list-check text-red-500"></i> My Tasks
-                    </h3>
-                    <div id="task-list" class="space-y-3">
-                        <p class="text-red-800/70 text-sm italic text-center py-4">Checking for tasks...</p>
-                    </div>
-                </div>
-
-                <div class="section-card p-6 relative">
-                    <h3 class="text-lg font-extrabold mb-4 flex items-center gap-2 text-red-900">
-                        <i class="fa-solid fa-users text-red-500"></i> My Flock
-                    </h3>
-                    <div id="flock-list" class="space-y-3 max-h-80 overflow-y-auto no-scrollbar pb-16"></div>
-                    <button onclick="toggleModal('add-soul-modal')" class="absolute bottom-6 right-6 btn-brand w-14 h-14 rounded-full flex items-center justify-center text-2xl active:scale-95 z-10">
-                        <i class="fa-solid fa-plus"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div id="wizard-view" class="max-w-3xl mx-auto hidden fade-in section-card p-6 md:p-8">
+    </div>
+    <div id="wizard-view" class="hidden fixed inset-0 bg-black/55 backdrop-blur-sm z-[95] overflow-y-auto p-4 md:p-8">
+        <div class="max-w-3xl mx-auto fade-in section-card p-6 md:p-8">
             <div class="mb-8 flex justify-between items-center border-b border-red-100 pb-4">
                 <div>
                     <p class="brand-badge">Report Journey</p>
@@ -297,20 +733,23 @@
                     <i class="fa-solid fa-church text-2xl text-red-500"></i>
                     <span class="font-semibold">Church Service Report</span>
                 </button>
+                <button onclick="selectReportType('outreach')" class="w-full text-left p-4 border border-red-100 rounded-xl hover:bg-red-50 transition flex items-center gap-4">
+                    <i class="fa-solid fa-bullhorn text-2xl text-red-500"></i>
+                    <span class="font-semibold">Outreach Report</span>
+                </button>
             </div>
 
             <div id="step-2" class="wizard-step hidden space-y-4">
-                <h3 class="text-lg font-bold text-red-900">Mark Attendance</h3>
+                <h3 id="step-2-title" class="text-lg font-bold text-red-900">Mark Attendance</h3>
+                <p id="step-2-description" class="text-sm text-red-700"></p>
                 <div id="wizard-flock-list" class="space-y-2 max-h-64 overflow-y-auto no-scrollbar p-2 bg-red-50/60 rounded-lg border border-red-100"></div>
                 <button onclick="nextStep(3)" class="btn-brand w-full py-3 font-bold">Continue</button>
             </div>
 
             <div id="step-3" class="wizard-step hidden space-y-4">
-                <h3 class="text-lg font-bold text-red-900">Quick Details</h3>
-                <textarea id="q-topic" placeholder="Main Topic/Message..." class="input-brand h-24"></textarea>
-                <textarea id="q-prayer" placeholder="Testimonies & Prayer Requests..." class="input-brand h-24"></textarea>
-                <textarea id="q-challenges" placeholder="Any Challenges?" class="input-brand h-24"></textarea>
-                <div class="flex gap-2">
+                <h3 id="step-3-title" class="text-lg font-bold text-red-900">Meeting Details</h3>
+                <div id="dynamic-questions-container" class="space-y-4"></div>
+                <div class="flex gap-2 pt-4">
                     <button onclick="prevStep(2)" class="btn-outline-brand w-1/3 py-3 font-bold">Back</button>
                     <button onclick="nextStep(4)" class="btn-brand w-2/3 py-3 font-bold">Review</button>
                 </div>
@@ -319,177 +758,25 @@
             <div id="step-4" class="wizard-step hidden space-y-6 text-center">
                 <i class="fa-solid fa-file-pdf text-6xl text-red-500"></i>
                 <h3 class="text-2xl brand-serif text-red-900">Ready to Submit</h3>
+                <p id="review-type" class="text-xs uppercase tracking-widest text-red-500 font-bold"></p>
                 <div class="flex justify-around bg-red-50 border border-red-100 p-4 rounded-lg">
                     <div><span id="review-present" class="block text-3xl font-extrabold text-red-700">0</span><span class="text-xs text-red-800 uppercase tracking-wider">Present</span></div>
                     <div><span id="review-absent" class="block text-3xl font-extrabold text-red-700">0</span><span class="text-xs text-red-800 uppercase tracking-wider">Absent</span></div>
                 </div>
+                <p id="review-topic" class="text-sm text-red-700"></p>
+                <p id="review-names-list" class="text-sm text-red-700"></p>
+
+                <input type="hidden" id="wizard-attendance-input">
+                <input type="hidden" id="wizard-absent-input">
+                <input type="hidden" id="wizard-type-select">
+                <span id="preview-attendance" class="hidden"></span>
+                <span id="preview-absent" class="hidden"></span>
+                <span id="preview-type" class="hidden"></span>
+
                 <button id="btn-submit-report" onclick="submitWizard()" class="btn-brand w-full py-4 font-bold text-lg">Generate & Upload PDF</button>
             </div>
         </div>
-
-        <div id="admin-view" class="max-w-6xl mx-auto hidden fade-in space-y-6">
-            <div class="section-card hero-card p-6 md:p-7">
-                <div class="flex items-center gap-4">
-                    <img src="https://firebasestorage.googleapis.com/v0/b/mealone-29b00.firebasestorage.app/o/WhatsApp%20Image%202026-01-27%20at%207.32.38%20AM.jpeg?alt=media&token=6913ddcf-3f97-40a7-9164-9e0b77eab524" alt="CMF logo" class="app-logo w-14 h-14">
-                    <div>
-                        <p class="brand-badge">Administration</p>
-                        <h2 class="brand-serif text-3xl text-red-900 mt-2">Admin Command Center</h2>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div class="metric-card metric-main">
-                    <p class="text-red-100 text-xs font-bold uppercase tracking-wider">Total Members</p>
-                    <h2 id="stat-total-members" class="text-3xl font-black mt-1">0</h2>
-                    <i class="fa-solid fa-users opacity-25 text-4xl float-right -mt-8"></i>
-                </div>
-
-                <div class="metric-card">
-                    <p class="text-red-600 text-xs font-bold uppercase tracking-wider">Active Executives</p>
-                    <h2 id="stat-total-execs" class="text-3xl font-black text-red-900 mt-1">0</h2>
-                    <i class="fa-solid fa-user-shield text-red-400 opacity-30 text-4xl float-right -mt-8"></i>
-                </div>
-
-                <div class="metric-card">
-                    <p class="text-red-600 text-xs font-bold uppercase tracking-wider">Last Attendance</p>
-                    <h2 id="stat-last-attendance" class="text-3xl font-black text-red-900 mt-1">0</h2>
-                    <i class="fa-solid fa-clipboard-check text-red-400 opacity-30 text-4xl float-right -mt-8"></i>
-                </div>
-            </div>
-
-            <div class="section-card p-6">
-                <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-red-900">
-                    <i class="fa-solid fa-thumbtack text-red-500"></i> Assign New Task
-                </h3>
-                <form id="assign-task-form" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-red-700 uppercase mb-1">Task Title</label>
-                        <input type="text" id="task-title" placeholder="Enter task title" required class="input-brand">
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-red-700 uppercase mb-1">Assign To</label>
-                            <select id="task-assignee-select" required class="input-brand bg-white">
-                                <option value="">Select Executive...</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-red-700 uppercase mb-1">Deadline</label>
-                            <input type="date" id="task-due-date" required class="input-brand">
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-brand w-full py-4 font-bold">Send Task & SMS Notification</button>
-                </form>
-            </div>
-
-            <div class="section-card p-6 mb-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-red-900">Church Executives</h3>
-                    <button onclick="toggleModal('add-exec-modal')" class="btn-brand px-4 py-2 text-sm font-bold">+ Add New Leader</button>
-                </div>
-
-                <div id="executives-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-            </div>
-
-            <div id="add-exec-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
-                <div class="section-card p-6 w-full max-w-md shadow-2xl">
-                    <h3 class="text-lg font-bold mb-4 text-red-900">Register New Executive</h3>
-                    <form id="add-exec-form" class="space-y-4">
-                        <input type="text" id="exec-name" placeholder="Name" class="input-brand" required>
-                        <input type="email" id="exec-email" placeholder="Email" class="input-brand" required>
-                        <input type="tel" id="exec-phone" placeholder="Phone number" class="input-brand" required>
-                        <div class="relative">
-                            <input type="password" id="exec-password" placeholder="Password" class="input-brand pr-10" required>
-                            <button type="button" class="password-toggle-btn" data-password-toggle="exec-password" aria-label="Show password">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
-
-                        <div class="flex gap-2 pt-2">
-                            <button type="button" onclick="toggleModal('add-exec-modal')" class="btn-outline-brand w-1/2 py-3">Cancel</button>
-                            <button type="submit" class="btn-brand w-1/2 py-3 font-bold">Save Leader</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="section-card p-6 mb-6">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                    <h3 class="text-xl font-bold text-red-900">Member Directory</h3>
-                    <div class="relative w-full md:w-64">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-red-300 text-sm"></i>
-                        <input type="text" id="member-search" onkeyup="filterMembers()" placeholder="Search members..." class="input-brand pl-10">
-                    </div>
-                </div>
-
-                <div class="overflow-x-scroll overflow-y-scroll">
-                    <button onclick="exportMemberData()" class="text-xs text-red-700 font-bold underline">Export Member List</button>
-                    <table class="w-full text-left border-collapse mt-2">
-                        <thead>
-                            <tr class="text-xs uppercase text-red-400 border-b border-red-100">
-                                <th class="py-3 px-2">Member</th>
-                                <th class="py-3 px-2">Status</th>
-                                <th class="py-3 px-2">Level/Course</th>
-                                <th class="py-3 px-2">Assigned To</th>
-                                <th class="py-3 px-2 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-member-table"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="section-card p-6">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-                    <div>
-                        <h3 class="text-xl font-bold text-red-900">Attendance Submission Summary</h3>
-                        <p class="text-xs text-red-600">Tracks who has submitted Tuesday and Friday reports in the current month.</p>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span id="attendance-summary-updated-at" class="text-xs text-red-500"></span>
-                        <button id="refresh-attendance-summary-btn" type="button" class="btn-outline-brand px-4 py-2 text-xs font-bold">
-                            <i class="fa-solid fa-rotate-right mr-1"></i> Refresh
-                        </button>
-                    </div>
-                </div>
-                <div class="overflow-x-auto mb-8">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="text-xs uppercase text-red-400 border-b border-red-100">
-                                <th class="py-3 px-2">Executive</th>
-                                <th class="py-3 px-2 text-center">Attended vs Should</th>
-                                <th class="py-3 px-2 text-center">Submitted</th>
-                                <th class="py-3 px-2 text-center">Expected</th>
-                                <th class="py-3 px-2 text-center">Pending</th>
-                                <th class="py-3 px-2">Last Submission</th>
-                            </tr>
-                        </thead>
-                        <tbody id="attendance-summary-table-body"></tbody>
-                    </table>
-                </div>
-
-                <h3 class="text-xl font-bold text-red-900 mb-4">Attendance Reports</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="text-xs uppercase text-red-400 border-b border-red-100">
-                                <th class="py-3 px-2">Submitted At</th>
-                                <th class="py-3 px-2">Type</th>
-                                <th class="py-3 px-2">Submitted By</th>
-                                <th class="py-3 px-2 text-center">Present</th>
-                                <th class="py-3 px-2 text-center">Absent</th>
-                                <th class="py-3 px-2 text-right">Report</th>
-                            </tr>
-                        </thead>
-                        <tbody id="attendance-table-body"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </main>
+    </div>
 
     <div id="add-soul-modal" class="hidden fixed inset-0 bg-black/55 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="section-card p-6 w-full max-w-md shadow-2xl fade-in">
@@ -518,7 +805,21 @@
             </form>
         </div>
     </div>
-
+    <div id="add-exec-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
+        <div class="section-card p-6 w-full max-w-md shadow-2xl">
+            <h3 class="text-lg font-bold mb-4 text-red-900">Register New Executive</h3>
+            <form id="add-exec-form" class="space-y-4">
+                <input type="text" id="exec-name" placeholder="Full Name" class="input-brand" required>
+                <input type="email" id="exec-email" placeholder="Email Address" class="input-brand" required>
+                <input type="tel" id="exec-phone" placeholder="Phone (e.g. 054...)" class="input-brand" required>
+                <input type="password" id="exec-password" placeholder="Set Password" class="input-brand" required>
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="toggleModal('add-exec-modal')" class="btn-outline-brand w-1/2 py-3">Cancel</button>
+                    <button type="submit" class="btn-brand w-1/2 py-3 font-bold">Save Leader</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <div id="sms-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
         <div class="section-card p-6 w-full max-w-sm shadow-2xl">
             <h3 id="sms-modal-title" class="text-lg font-bold mb-2 text-red-900">Send Message</h3>
@@ -528,6 +829,100 @@
                 <button onclick="toggleModal('sms-modal')" class="btn-outline-brand w-1/2 py-3">Cancel</button>
                 <button onclick="confirmSendSMS()" class="btn-brand w-1/2 py-3 font-bold">Send SMS</button>
             </div>
+        </div>
+    </div>
+    <div id="profile-view-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[80]">
+        <div class="section-card p-0 w-full max-w-lg shadow-2xl fade-in overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="relative h-32 bg-gradient-to-r from-red-600 to-red-900">
+                <button onclick="toggleModal('profile-view-modal')" class="absolute top-4 right-4 text-white hover:text-red-200"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                <img id="profile-view-photo" src="https://ui-avatars.com/api/?name=User&background=fee2e2&color=991b1b" class="absolute -bottom-12 left-6 w-24 h-24 rounded-full border-4 border-white object-cover shadow-lg bg-white">
+            </div>
+            <div class="px-6 pt-16 pb-6 overflow-y-auto no-scrollbar flex-grow">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 id="profile-view-name" class="text-2xl brand-serif font-bold text-red-900">Member Name</h2>
+                        <p id="profile-view-role" class="text-sm font-bold text-red-500 uppercase tracking-widest mt-1">Role</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-red-50 p-3 rounded-xl border border-red-100">
+                        <p class="text-[10px] text-red-700 font-bold uppercase mb-1">Course</p>
+                        <p id="profile-view-course" class="text-sm font-semibold text-red-950">Not Set</p>
+                    </div>
+                    <div class="bg-red-50 p-3 rounded-xl border border-red-100">
+                        <p class="text-[10px] text-red-700 font-bold uppercase mb-1">Level / Year</p>
+                        <p id="profile-view-level" class="text-sm font-semibold text-red-950">Not Set</p>
+                    </div>
+                </div>
+                <h3 class="text-lg font-bold text-red-900 mb-3 border-b border-red-100 pb-2"><i class="fa-solid fa-graduation-cap text-red-400 mr-2"></i>Academic Performance</h3>
+                <div id="profile-academic-list" class="space-y-3 mb-6">
+                    <p class="text-xs text-red-500 italic">Loading records...</p>
+                </div>
+                <div class="flex gap-2">
+                    <button id="btn-edit-profile" class="btn-outline-brand w-1/2 py-2 text-sm font-bold"><i class="fa-solid fa-pen-to-square mr-1"></i>Edit Details</button>
+                    <button id="btn-add-academic-record" class="btn-brand w-1/2 py-2 text-sm font-bold"><i class="fa-solid fa-plus mr-1"></i>Log Result</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="edit-profile-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[90]">
+        <div class="section-card p-6 w-full max-w-md shadow-2xl">
+            <h3 class="text-xl brand-serif font-bold mb-4 text-red-900">Edit Profile</h3>
+            <form id="edit-profile-form" class="space-y-4">
+                <input type="hidden" id="edit-profile-id">
+                <input type="hidden" id="edit-profile-type">
+                <div>
+                    <label class="block text-xs font-bold text-red-700 uppercase mb-1">Course of Study</label>
+                    <input type="text" id="edit-profile-course" placeholder="e.g. Medicine, Pharmacy" class="input-brand">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-red-700 uppercase mb-1">Current Level / Year</label>
+                    <input type="number" id="edit-profile-level" placeholder="e.g. 100, 200, 3" class="input-brand">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-red-700 uppercase mb-1">Photo URL (Cloudflare R2 link)</label>
+                    <input type="url" id="edit-profile-photo" placeholder="https://..." class="input-brand">
+                </div>
+                <div class="flex gap-2 pt-4">
+                    <button type="button" onclick="toggleModal('edit-profile-modal')" class="btn-outline-brand w-1/2 py-3">Cancel</button>
+                    <button type="submit" class="btn-brand w-1/2 py-3 font-bold">Save Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="add-academic-record-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[90]">
+        <div class="section-card p-6 w-full max-w-md shadow-2xl fade-in">
+            <h3 class="text-xl brand-serif text-red-900 mb-4">Log Academic Score</h3>
+            <form id="add-academic-record-form" class="space-y-4">
+                <input type="hidden" id="academic-student-id">
+                <input type="hidden" id="academic-student-type">
+                <input type="hidden" id="academic-student-course">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-red-700 uppercase mb-1">Academic Year</label>
+                        <select id="academic-year" required class="input-brand bg-white">
+                            <option value="1">Year 1</option>
+                            <option value="2">Year 2</option>
+                            <option value="3">Year 3</option>
+                            <option value="4">Year 4</option>
+                            <option value="5">Year 5</option>
+                            <option value="6">Year 6</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-red-700 uppercase mb-1">Term / Block</label>
+                        <input type="text" id="academic-term" placeholder="e.g. 1.1 or Tri 1" required class="input-brand">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-red-700 uppercase mb-1">Score / GPA</label>
+                    <input type="number" step="0.01" id="academic-score" placeholder="e.g. 78.5 or 3.6" required class="input-brand">
+                </div>
+                <div class="flex gap-2 pt-4">
+                    <button type="button" onclick="toggleModal('add-academic-record-modal')" class="btn-outline-brand w-1/2 py-3">Cancel</button>
+                    <button type="submit" class="btn-brand w-1/2 py-3 font-bold">Save Record</button>
+                </div>
+            </form>
         </div>
     </div>
 
